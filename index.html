@@ -6,20 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
   </head>
   <body>
     <div class="main">
       <h1>To-do list</h1>
-      <div class="header">
+      <div class="input-section">
         <input  type="text" class="add-task" id="add-task">
         <button class= "btn" onclick="addNewTask()">Add</button>
         <button class= "btn" onclick="deleteAllTask()">Clean</button>
       </div>
-        <div class="wrapper-content">
-          <div class="content-page" id="content-page"></div>  
-        </div>
+      <p id="errors"></p>
+      <div class="wrapper-content">
+        <div class="content-page-section" id="content-page"></div>  
       </div>
-    </div> 
-  </body>
+    </div>
+  </div> 
+</body>
+<script src="script.js"></script>
 </html>

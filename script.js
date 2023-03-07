@@ -1,79 +1,182 @@
-const allTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+url = 'http://localhost:8000/tasks/';
+headersText = {
+  'Content-Type': 'application/json;charset=utf-8',
+  'Access-Control-Allow-Origin': '*'
+};
 
-const addNewTask = () => {
-  input = document.getElementById('add-task');
+const showError = (message) => {
+  const error = document.getElementById('errors');
 
-  if (input.value.trim()!='') {
-    allTasks.push({
-      text: input.value.trim(),
-      isCheck: false,
-      isEdit: false 
-    })
-    input.value = '';
-    localStorage.setItem('tasks',JSON.stringify(allTasks));
+  if (!error) {
+    return
+  }
+
+  error.innerText = message;
+}
+
+const getAllTasks = async () => {
+  try {
+    const response = await fetch (url, {
+      method: "GET",
+      headers: headersText
+    });
+
+    const result = await response.json();
+    allTasks = result;
     render();
+  } catch(error) {
+    showError('Ошибка при загрузке списка задач');
   }
 }
 
-const deleteAllTask = () => {
-  allTasks.length = 0;
-  localStorage.clear();
-  render();
-}
+const addNewTask = async () => {
+  const input = document.getElementById('add-task');
 
-const changeStatusTask = (index) => {
-  if (!allTasks[index].isEdit) {
-  allTasks[index].isCheck = !allTasks[index].isCheck;
-  localStorage.setItem('tasks',JSON.stringify(allTasks));
+  if (!input.value.trim()) {
+    showError('Введите текст');
+    return
   }
-  render();
+  try {
+    const response = await fetch (url, {
+      method: "POST",
+      headers: headersText,
+      body: JSON.stringify({
+        text: input.value.trim()
+      })
+    });
+      const newTask  = await response.json();
+
+      allTasks.push(newTask);
+      input.value = '';
+      render();
+  } catch(error) {
+    showError('Ошибка при добавлении задачи');
+  }
 }
 
-const deleteTask = (index) => {
-  allTasks.splice(index,1);
-  localStorage.setItem('tasks',JSON.stringify(allTasks));
-  render();
+const deleteAllTask = async () => {
+    try { 
+    const response = await fetch (url, {
+      method: "DELETE",
+      headers: headersText,
+    });
+      const resultDelete  = await response.json();
+
+      if (resultDelete.deletedCount !== allTasks.length) {
+        showError('Ошибка удаления списка задач на сервере');
+        return
+      }
+      allTasks = [];
+      render();
+  } catch(error) {
+    showError('Ошибка при удалении списка задач');
+  }
 }
 
-const editTaskText = (index) => {
-  if (!allTasks[index].isCheck) {
-    allTasks[index].isEdit = true;
-    localStorage.setItem('tasks',JSON.stringify(allTasks));
+const changeStatusTask = async (id) => {
+  const checkbox = document.getElementById(`checkbox-${id}`);
+  const index = allTasks.findIndex(task => id === task._id); 
+  const urlChangeStatusTask = url + 'checkbox/' + id
+  try {
+    const response = await fetch (urlChangeStatusTask, {
+      method: "PATCH",
+      headers: headersText,
+      body: JSON.stringify({
+        isCheck: checkbox.checked
+      })
+    });
+      const editedCheckbox  = await response.json();
+      allTasks[index].isCheck = editedCheckbox.isCheck;
+      render();
+  } catch(error) {
+    showError('Ошибка при изменени статуса задачи');
+  }
+}
+
+const deleteTask = async (id) => {
+  const urlDeleteTask = url + id;
+  const index = allTasks.findIndex(task => id === task._id); 
+  try { 
+    const response = await fetch (urlDeleteTask, {
+      method: "DELETE",
+      headers: headersText,
+    });
+    const resultDelete  = await response.json();
+
+    if (resultDelete.deletedCount !== 1) {
+      showError('Ошибка удаления задачи на сервере');
+      return
+    } 
+
+    allTasks.splice(index,1);
     render();
+  } catch(error) {
+    showError('Ошибка при удалении списка задач');
   }
 }
 
-const applyEditText = (text, index) => {
-  allTasks[index].text = text;
-  allTasks[index].isEdit = false;
-  localStorage.setItem('tasks',JSON.stringify(allTasks));
+const editTaskText = (id) => {
+  const index = allTasks.findIndex(task => id === task._id);
+  allTasks[index].isEdit = true;
   render();
 }
 
-const cancelEditText = (index) => {
+const applyEditText = async (text, id) => {
+  if (!text.trim()) {
+    showError('Введите текст');
+    return
+  }
+  const urlApplyEditText = url + 'text/' + id;
+  const index = allTasks.findIndex(task => id === task._id);
+
+  try {
+    const response = await fetch (urlApplyEditText, {
+      method: "PATCH",
+      headers: headersText,
+      body: JSON.stringify({
+        text: text
+      })
+    });
+      const editedText  = await response.json();
+      
+      if (editedText.text !== text) { 
+        showError('Ошибка при редактировании объекта на сервере!');
+        return
+      } 
+
+      allTasks[index].text = editedText.text;
+      allTasks[index].isEdit = false;
+      render();
+  } catch(error) {
+    showError('Ошибка при добавлении задачи');
+  }
+}
+
+const cancelEditText = (id) => {
+  const index = allTasks.findIndex(task => id === task._id);
+
   allTasks[index].isEdit = false;
-  localStorage.setItem('tasks',JSON.stringify(allTasks));
   render();
 }
 
 const render = () => {
+  
   const copyAllTasks = allTasks.slice();
   const content = document.getElementById('content-page');
+
+  showError('');
 
   if (!content) {
     return
   }
-
+  
   while(content.firstChild) {
     content.removeChild(content.firstChild);
   }
+  copyAllTasks.sort((x, y) => x.isCheck >= y.isCheck ? 1 : -1);
   
-  copyAllTasks.sort((x, y) => {
-    return Number(x.isCheck) - Number(y.isCheck);
-  })
-
-  copyAllTasks.forEach((item, index) => {
-    const {text, isCheck, isEdit} = item;
+  copyAllTasks.forEach((task, index) => {
+    const {text, isCheck, isEdit, _id: id} = task;
     const conteiner = document.createElement('div');
     const taskCheckbox = document.createElement('input');
     const buttonApplyEditText = document.createElement('button');
@@ -88,10 +191,11 @@ const render = () => {
     taskCheckbox.type = 'checkbox';
     taskCheckbox.checked = isCheck;
     taskCheckbox.className = 'taskCheckbox';
-    taskCheckbox.onchange = () => {
-      changeStatusTask(allTasks.indexOf(item));
-    }
+    taskCheckbox.id = `checkbox-${id}`;
 
+    taskCheckbox.onchange = () => {
+      changeStatusTask(id);
+    }
     if (isEdit) {
       inputEditTaskText.value  = copyAllTasks[index].text;
       buttonApplyEditText.className = 'buttonApplyEditText button-task';
@@ -102,11 +206,11 @@ const render = () => {
       conteiner.append(buttonCancelEditText);
       
       buttonApplyEditText.onclick = () => {
-        applyEditText(inputEditTaskText.value, allTasks.indexOf(item));
+        applyEditText(inputEditTaskText.value, id);
       }
  
       buttonCancelEditText.onclick = () => {
-        cancelEditText(allTasks.indexOf(item));
+        cancelEditText(id);
       }     
     } else {  
       textTask.innerText = text;
@@ -119,11 +223,11 @@ const render = () => {
       conteiner.appendChild(buttonDeleteTask); 
       
       buttonDeleteTask.onclick = () => {
-        deleteTask(allTasks.indexOf(item));
+        deleteTask(id);
       }
       
       buttonEditTaskText.onclick = () => {
-        editTaskText(allTasks.indexOf(item));
+        editTaskText(id);
       }
     } 
     content.appendChild(conteiner);
@@ -131,6 +235,6 @@ const render = () => {
   });
 }
 
-window.onload =  function init() {
-  render();
+window.onload = async function init() {
+  await getAllTasks();
 }

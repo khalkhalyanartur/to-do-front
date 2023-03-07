@@ -1,0 +1,79 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.content-page-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-task {
+  display: flex;
+  height: 40px;
+  align-items: center;
+}
+
+.taskCheckbox {
+  width: 30px;
+  height: 30px;
+}
+
+.header {
+  margin-bottom: 10px;
+  display: flex;
+}
+
+.task-text {
+  color: black;
+  font-size: 25px;
+  padding-right: 5px;
+}
+
+.done-text {
+  color: rgba(0,0,0,0.3);
+  text-decoration: line-through;
+}
+
+.wrapper-content {
+  min-width: 25vw;
+}
+
+.button-task {  
+  width: 30px;
+  height: 30px;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+}
+
+.buttonEditTaskText {
+  background-image: url('img/edit.svg');
+}
+
+.buttonDeleteTask {
+  background-image: url('img/delete.svg');
+}
+
+.buttonApplyEditText {
+  background-image: url('img/apply.svg');
+}
+
+.buttonCancelEditText {
+  background-image: url('img/cancel.svg');
+}
+ 
+.add-task {
+  min-width: 20vw;
+  min-height: 25px;
+  margin-right: 3px;
+}
+
+.btn {
+  width: 5vw;
+  min-width: 80px;
+  min-height: 30px;
+  font-size: 20px;
+  margin-right: 3px;
+}
